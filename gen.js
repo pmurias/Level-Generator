@@ -2,7 +2,7 @@ function print(x) {
     process.stdout.write(x);
 }
 
-function display(x) {
+function display(level) {
     for (var y=0;y<level.length;y++) {
         for (var x=0;x<level[y].length;x++) {
             print(level[y][x]);
@@ -12,7 +12,7 @@ function display(x) {
 }
 
 var level = [];
-var size = 10;
+var size = 30;
 
 for (var i=0;i<size;i++) {
     level[i] = [];
@@ -21,39 +21,148 @@ for (var i=0;i<size;i++) {
     }
 }
 
-var rules = {'c':
-    {
-        pattern: [
-            ['#','#','#'],
-            [' ',' ','c'],
-            ['#','#','#']
-        ],
-        offset: [0,-1]
+function rotate_pattern(p) {
+    var new_p = [];
+    var arrows = {};
+
+
+    arrows['^'] = '>';
+    arrows['>'] = 'v';
+    arrows['<'] = '^';
+    arrows['v'] = '<';
+
+    for (var y=0;y<p[0].length;y++) {
+        new_p[y] = [];
+        for (var x=0;x<p.length;x++) {
+//            console.log(y,x,p.length-x-1,y);
+            var tile = p[p.length-x-1][y];
+            tile = arrows[tile] || tile;
+            new_p[y][x] = tile;
+        }
+    }
+    return new_p;
+
+}
+
+//bit silly but should avoid bugs
+function calc_offset(offset,pattern) {
+    var old = pattern[-offset[0]][-offset[1]];
+    pattern[-offset[0]][-offset[1]] = 'X';
+    print("================\n");
+    //display(pattern);
+    var rotated = rotate_pattern(pattern);
+    print("================\n");
+    //display(rotated);
+    print("================\n");
+    pattern[-offset[0]][-offset[1]] = old;
+
+    for (var y=0;y<rotated.length;y++) {
+        for (var x=0;x<rotated[y].length;x++) {
+            if (rotated[y][x] == 'X') {
+                return [-y,-x];
+            }
+        }
     }
 }
+function rotate_rules(rules) {
+    return rules.map(function(r) {
+        return {
+            pattern:rotate_pattern(r.pattern),
+            p:r.p,
+            offset:calc_offset(r.offset,r.pattern),
+        }
+    });
+}
+
+var rules = {'>':
+    [{
+        pattern: [
+            ['?','^','?'],
+            [' ',' ','>'],
+            ['?','v','?']
+        ],
+        offset: [-1,0],
+        p:0.1,
+    },
+    {
+        pattern: [
+            ['?','^'],
+            [' ',' '],
+            ['?','v']
+        ],
+        offset: [-1,0],
+        p:0.1,
+    },
+    {
+        pattern: [
+            ['?','?'],
+            [' ','>'],
+            ['?','?']
+        ],
+        offset: [-1,0],
+        p:0.8,
+    }
+    ]
+}
+
+rules['v'] = rotate_rules(rules['>']);
+rules['<'] = rotate_rules(rules['v']);
+rules['^'] = rotate_rules(rules['<']);
+
+/*display(rules['>'][2].pattern);
+display(rotate_pattern(rules['>'][2].pattern));*/
+
 
 function replace(rules,board) {
     var rule;
+    var random = Math.random();
     for (var y=0;y<level.length;y++) {
         for (var x=0;x<level[y].length;x++) {
-            if (rule = rules[level[y][x]]) {
-                var offsetX = x+rule.offset[0];
-                var offsetY = y+rule.offset[1];
+            var tile = level[y][x];
+            for (var r in rules[tile]) {
+                var rule = rules[tile][r]; 
+                if (random > rule.p) {
+                    random -= rule.p;
+                    continue;
+                }
+                var offsetX = x+rule.offset[1];
+                var offsetY = y+rule.offset[0];
+                if (offsetY+rule.pattern.length > board.length
+                    || offsetY < 0
+                    || offsetX < 0
+                    || offsetX+rule.pattern[0].length > board[0].length) {
+                    continue;
+                }
+                console.log(tile);
+                display(rule.pattern);
+                console.log('offsets:',rule.offset);
                 for (var py=0;py<rule.pattern.length;py++) {
                     for (var px=0;px<rule.pattern[py].length;px++) {
-                        board[offsetY+py][offsetX+px] = rule.pattern[py][px];
+                        var replacement = rule.pattern[py][px];
+                        if (replacement != '?')  {
+                            console.info('setting:',offsetY+py,board.length);
+                            board[offsetY+py][offsetX+px] = replacement;
+                        }
                     }
                 }
+                //console.info('replacement: ',r);
                 return;
             }
         }
     }
 }
 
-level[3][0] = 'c';
-
-for (var i=0;i<3;i++) {
+level[5][3] = '>';
+for (var i=0;i<100;i++) {
+    print("\n\n\n");
+    display(level);
     replace(rules,level);
 }
+/*
+for (var i=0;i<100;i++) {
+    replace(rules,level);
+}
+*/
 
 display(level);
+
