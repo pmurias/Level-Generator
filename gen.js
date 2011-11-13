@@ -48,12 +48,9 @@ function rotate_pattern(p) {
 function calc_offset(offset,pattern) {
     var old = pattern[-offset[0]][-offset[1]];
     pattern[-offset[0]][-offset[1]] = 'X';
-    print("================\n");
     //display(pattern);
     var rotated = rotate_pattern(pattern);
-    print("================\n");
     //display(rotated);
-    print("================\n");
     pattern[-offset[0]][-offset[1]] = old;
 
     for (var y=0;y<rotated.length;y++) {
@@ -101,9 +98,14 @@ var rules = {'>':
         ],
         offset: [-1,0],
         p:0.8,
-    }
-    ]
-}
+    },
+    {
+        pattern: [[' ']],
+        p:0,
+        offset: [0,0]
+    }]
+
+};
 
 rules['v'] = rotate_rules(rules['>']);
 rules['<'] = rotate_rules(rules['v']);
@@ -113,39 +115,46 @@ rules['^'] = rotate_rules(rules['<']);
 display(rotate_pattern(rules['>'][2].pattern));*/
 
 
+function replace_tile(rules,board,y,x) {
+    var tile = board[y][x];
+    var random = Math.random();
+    for (var r in rules[tile]) {
+        var rule = rules[tile][r]; 
+ //       console.info(random,rule.p);
+        if (random > rule.p) {
+//            console.info("did not choose rule");
+            random -= rule.p;
+            continue;
+        }
+        var offsetX = x+rule.offset[1];
+        var offsetY = y+rule.offset[0];
+        if (offsetY+rule.pattern.length > board.length
+            || offsetY < 0
+            || offsetX < 0
+            || offsetX+rule.pattern[0].length > board[0].length) {
+            random -= rule.p;
+            continue;
+        }
+        //console.log(tile);
+        for (var py=0;py<rule.pattern.length;py++) {
+            for (var px=0;px<rule.pattern[py].length;px++) {
+                var replacement = rule.pattern[py][px];
+                if (replacement != '?')  {
+                    board[offsetY+py][offsetX+px] = replacement;
+                }
+            }
+        }
+        //console.info('replacement: ',r);
+        return;
+    }
+    console.info("probabilities are incorrectly defined");
+}
 function replace(rules,board) {
     var rule;
-    var random = Math.random();
-    for (var y=0;y<level.length;y++) {
-        for (var x=0;x<level[y].length;x++) {
-            var tile = level[y][x];
-            for (var r in rules[tile]) {
-                var rule = rules[tile][r]; 
-                if (random > rule.p) {
-                    random -= rule.p;
-                    continue;
-                }
-                var offsetX = x+rule.offset[1];
-                var offsetY = y+rule.offset[0];
-                if (offsetY+rule.pattern.length > board.length
-                    || offsetY < 0
-                    || offsetX < 0
-                    || offsetX+rule.pattern[0].length > board[0].length) {
-                    continue;
-                }
-                console.log(tile);
-                display(rule.pattern);
-                console.log('offsets:',rule.offset);
-                for (var py=0;py<rule.pattern.length;py++) {
-                    for (var px=0;px<rule.pattern[py].length;px++) {
-                        var replacement = rule.pattern[py][px];
-                        if (replacement != '?')  {
-                            console.info('setting:',offsetY+py,board.length);
-                            board[offsetY+py][offsetX+px] = replacement;
-                        }
-                    }
-                }
-                //console.info('replacement: ',r);
+    for (var y=0;y<board.length;y++) {
+        for (var x=0;x<board[y].length;x++) {
+            if (rules[board[y][x]]) {
+                replace_tile(rules,board,y,x);
                 return;
             }
         }
@@ -153,16 +162,15 @@ function replace(rules,board) {
 }
 
 level[5][3] = '>';
-for (var i=0;i<100;i++) {
+/*for (var i=0;i<100;i++) {
     print("\n\n\n");
     display(level);
     replace(rules,level);
 }
-/*
+*/
 for (var i=0;i<100;i++) {
     replace(rules,level);
 }
-*/
 
 display(level);
 
