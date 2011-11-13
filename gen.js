@@ -2,10 +2,11 @@ function print(x) {
     process.stdout.write(x);
 }
 
-function display(level) {
+function display(level,filter) {
+    if (!filter) filter = {};
     for (var y=0;y<level.length;y++) {
         for (var x=0;x<level[y].length;x++) {
-            print(level[y][x]);
+            print(filter[level[y][x]] || level[y][x]);
         }
         print("\n");
     }
@@ -151,14 +152,18 @@ function replace_tile(rules,board,y,x) {
 }
 function replace(rules,board) {
     var rule;
+    var possible = [];
     for (var y=0;y<board.length;y++) {
         for (var x=0;x<board[y].length;x++) {
             if (rules[board[y][x]]) {
-                replace_tile(rules,board,y,x);
-                return;
+                possible.push([y,x]);
             }
         }
     }
+    //console.info(possible);
+    //console.info(i);
+    var i = Math.floor(Math.random()*possible.length);
+    replace_tile(rules,board,possible[i][0],possible[i][1]);
 }
 
 level[5][3] = '>';
@@ -168,9 +173,14 @@ level[5][3] = '>';
     replace(rules,level);
 }
 */
-for (var i=0;i<100;i++) {
+for (var i=0;i<200;i++) {
     replace(rules,level);
 }
 
-display(level);
+var filter = {};
+filter['<'] = ' ';
+filter['>'] = ' ';
+filter['^'] = ' ';
+filter['v'] = ' ';
+display(level,filter);
 
