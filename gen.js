@@ -13,7 +13,7 @@ function display(level,filter) {
 }
 
 var level = [];
-var size = 30;
+var size = 80;
 
 for (var i=0;i<size;i++) {
     level[i] = [];
@@ -75,21 +75,21 @@ function rotate_rules(rules) {
 var rules = {'>':
     [{
         pattern: [
-            ['?','^','?'],
-            [' ',' ','>'],
+            ['?','?','?'],
+            [' ',' ','?'],
             ['?','v','?']
         ],
         offset: [-1,0],
-        p:0.1,
+        p:0.03,
     },
     {
         pattern: [
-            ['?','^'],
-            [' ',' '],
-            ['?','v']
+            ['?','?','^'],
+            [' ',' ','>'],
+            ['?','?','v']
         ],
         offset: [-1,0],
-        p:0.1,
+        p:0.03,
     },
     {
         pattern: [
@@ -98,7 +98,7 @@ var rules = {'>':
             ['?','?']
         ],
         offset: [-1,0],
-        p:0.8,
+        p:0.94,
     },
     {
         pattern: [[' ']],
@@ -162,6 +162,7 @@ function replace(rules,board) {
     }
     //console.info(possible);
     //console.info(i);
+    if (!possible.length) return;
     var i = Math.floor(Math.random()*possible.length);
     replace_tile(rules,board,possible[i][0],possible[i][1]);
 }
@@ -173,7 +174,7 @@ level[5][3] = '>';
     replace(rules,level);
 }
 */
-for (var i=0;i<200;i++) {
+for (var i=0;i<1000;i++) {
     replace(rules,level);
 }
 
